@@ -5,14 +5,11 @@
 # BOT_ROOT        = File.join(File.dirname(__FILE__), '..')
 
 require 'rubygems'
-# require 'bundler/setup'
 require 'optparse'
 require 'bot'
-# require File.join(BOT_ROOT, 'lib', 'bot')
-
+require 'daemons'
 
 options = {}
-
 
 begin                                                                                                                                                                                                             
   optparse = OptionParser.new do |opts|
@@ -30,30 +27,48 @@ begin
              "path to your plugins folder" ) do |pp|
       options[:plugin_path] = pp
     end
+    
+    opts.on("-d", "run as a daemon") do |opt|
+      options[:daemon] = opt
+    end
+    
+    opts.on("-iPID_FILE_PATH", "--pid_file PID_FILE_PATH", "path to pid file when daemonizing") do |opt|
+      options[:pid_path] = opt
+    end
 
     opts.on_tail("-h", "--help", "prints this help text") do 
       p opts
       exit
     end
+    
   end
   
   optparse.parse!
 
-  mandatory = [:config_file, :env, :plugin_path]                                                                                                                                                              
-  missing = mandatory.select{ |param| options[param].nil? }                                                                                                                          
-  if not missing.empty?                                                                                                                                                            
-    puts "Missing options: #{missing.join(', ')}"                                                                                                                                  
-    puts optparse                                                                                                                                                                  
-    exit                                                                                                                                                                           
-  end                                                                                                                                                                             
-rescue OptionParser::InvalidOption, OptionParser::MissingArgument                                                                                                         
-  puts $!.to_s                                                         
-  puts optparse                                                        
-  exit                                                                 
+  mandatory = [:config_file, :env, :plugin_path]
+  missing = mandatory.select{ |param| options[param].nil? }
+  if not missing.empty?
+    puts "Missing options: #{missing.join(', ')}"
+    puts optparse
+    exit
+  end
+rescue OptionParser::InvalidOption, OptionParser::MissingArgument
+  puts $!.to_s
+  puts optparse
+  exit
 end
 
-
+# Create our bot and connect
 bot.create(options[:config_file], options[:env], options[:plugin_path])
-
 bot.connect
+
+# Setup our daemon
+if options[:daemon]
+  pid_file = options[:pid_file] || "/tmp/campfire-bot.#{options[:env]}.pid"
+  
+  Daemons.daemonize
+  
+  File.open(pid_file, 'w') { |file| file.puts($$) }
+end
+
 bot.run
