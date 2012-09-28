@@ -15,16 +15,16 @@ begin
   optparse = OptionParser.new do |opts|
     opts.banner = "Usage: campfire-bot [options]"
 
-    opts.on("-cCONFIG_FILE", "--config CONFIG_FILE", "path to your config file") do |config|
+    opts.on("-cCONFIG_FILE", "--config CONFIG_FILE", "Path to your config file") do |config|
       options[:config_file] = config
     end
 
-    opts.on("-eENVIRONMENT", "--environment ENVIRONMENT", "the environment name as specified in the config file") do |env|
+    opts.on("-eENVIRONMENT", "--environment ENVIRONMENT", "The environment name as specified in the config file") do |env|
       options[:env] = env
     end  
 
     opts.on( "-pPLUGIN_PATH", "--plugin_path PLUGIN_PATH",
-             "path to your plugins folder" ) do |pp|
+             "Path to your plugins folder" ) do |pp|
       options[:plugin_path] = pp
     end
     
@@ -32,8 +32,12 @@ begin
       options[:daemon] = opt
     end
     
-    opts.on("-iPID_FILE_PATH", "--pid_file PID_FILE_PATH", "path to pid file when daemonizing") do |opt|
-      options[:pid_path] = opt
+    opts.on("-iPID_DIRECTORY", "--pid_directory PID_DIRECTORY", "Location where the pid file and any backtrace dumps will be written (default: /tmp/)") do |opt|
+      options[:pid_directory] = opt
+    end
+    
+    opts.on("-aAPP_NAME", "--app_name APP_NAME", "Name for the application (used for pid file, backtrace, and daemonizing)") do |opt|
+      options[:app_name] = opt
     end
 
     opts.on_tail("-h", "--help", "prints this help text") do 
@@ -64,11 +68,16 @@ bot.connect
 
 # Setup our daemon
 if options[:daemon]
-  pid_file = options[:pid_file] || "/tmp/campfire-bot.#{options[:env]}.pid"
+  pid_path = options[:pid_directory] || "/tmp/"
+  app_name = options[:app_name] || 'campfire_bot'
   
-  Daemons.daemonize
-  
-  File.open(pid_file, 'w') { |file| file.puts($$) }
+  Daemons.daemonize(
+    :backtrace  => true,
+    :dir_mode   => :normal,
+    :dir        => pid_path,
+    :app_name   => app_name,
+    :log_output => false
+  )
 end
 
 bot.run
