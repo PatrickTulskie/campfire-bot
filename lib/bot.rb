@@ -12,6 +12,7 @@ require 'fileutils'
 require "message"
 require "event"
 require "plugin"
+require "core_extensions/array_extension"
 
 require 'tinder'
 
