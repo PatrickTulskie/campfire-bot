@@ -69,11 +69,23 @@ module CampfireBot
         # since room#listen blocks, stick it in its own thread
         @rooms.each_pair do |room_name, room|
           Thread.new do
+            retry_attempts = 0
             begin
+              retry_attempts += 1
               room.listen(:timeout => 8) do |raw_msg|
                 handle_message(CampfireBot::Message.new(raw_msg.merge({:room => room})))
+                retry_attempts = 0
               end
-            rescue Exception => e 
+            rescue Tinder::Error => e
+              # These are usually temporary errors.  Let's just keep retrying...
+              sleep 3
+              retry
+            rescue Exception => e
+              if e.message.include?("unable to resolve server address") || (retry_attempts < 3)
+                # Probably temporary issues.  Just sleep for a few seconds and then retry.
+                sleep 5
+                retry
+              end
               trace = e.backtrace.join("\n")
               abort "something went wrong! #{e.message}\n #{trace}"
             end
