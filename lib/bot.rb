@@ -80,6 +80,10 @@ module CampfireBot
               # These are usually temporary errors.  Let's just keep retrying...
               sleep 3
               retry
+            rescue OpenSSL::SSL::SSLError => e
+              # These are usually temporary errors.  Let's just keep retrying...
+              sleep 3
+              retry
             rescue Exception => e
               if e.message.include?("unable to resolve server address") || (retry_attempts < 3)
                 # Probably temporary issues.  Just sleep for a few seconds and then retry.
