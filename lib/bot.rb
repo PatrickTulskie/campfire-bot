@@ -76,11 +76,7 @@ module CampfireBot
                 handle_message(CampfireBot::Message.new(raw_msg.merge({:room => room})))
                 retry_attempts = 0
               end
-            rescue Tinder::Error => e
-              # These are usually temporary errors.  Let's just keep retrying...
-              sleep 3
-              retry
-            rescue OpenSSL::SSL::SSLError => e
+            rescue Tinder::Error, Tinder::ListenFailed, Tinder::SSLRequiredError, Tinder::AuthenticationFailed, OpenSSL::SSL::SSLError
               # These are usually temporary errors.  Let's just keep retrying...
               sleep 3
               retry
