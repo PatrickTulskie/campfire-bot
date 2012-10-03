@@ -55,10 +55,12 @@ module CampfireBot
         join_rooms
       rescue Errno::ENETUNREACH, SocketError => e
         @log.fatal "We had trouble connecting to the network: #{e.class}: #{e.message}"
-        abort "We had trouble connecting to the network: #{e.class}: #{e.message}"
+        # abort "We had trouble connecting to the network: #{e.class}: #{e.message}"
+        raise
       rescue Exception => e
         @log.fatal "Unhandled exception while joining rooms: #{e.class}: #{e.message} \n #{$!.backtrace.join("\n")}"
-        abort "Unhandled exception while joining rooms: #{e.class}: #{e.message} \n #{$!.backtrace.join("\n")}"
+        # abort "Unhandled exception while joining rooms: #{e.class}: #{e.message} \n #{$!.backtrace.join("\n")}"
+        raise
       end  
     end
 
@@ -87,7 +89,8 @@ module CampfireBot
                 retry
               end
               trace = e.backtrace.join("\n")
-              abort "something went wrong! #{e.message}\n #{trace}"
+              @log.fatal "Unhandled exception while running: #{e.class}: #{e.message} \n #{e.backtrace.join("\n")}"
+              raise
             end
           end
         end
