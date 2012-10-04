@@ -29,19 +29,8 @@ module CampfireBot
       @plugin_path = plugin_path
       @environment_name = environment_name
       
-      @root_logger = Logging.logger["CampfireBot"]
-      @log = Logging.logger[self]
-      
-      # TODO much of this should be configurable per environment
-
-      @root_logger.add_appenders Logging.appenders.rolling_file("#{@environment_name}.log", 
-                            :layout => Logging.layouts.pattern(:pattern => "%d | %-6l | %-12c | %m\n"),
-                            :age => 'daily', 
-                            :keep => 7)
-      @root_logger.level = @config['log_level'] rescue :info
-      
+      @log      = Logging.logger[self]
       @timeouts = 0
-      
       @rooms    = {}
       
     end
@@ -72,32 +61,11 @@ module CampfireBot
         # since room#listen blocks, stick it in its own thread
         @rooms.each_pair do |room_name, room|
           Thread.new do
+            
             room.listen(:timeout => 8) do |raw_msg|
               handle_message(CampfireBot::Message.new(raw_msg.merge({:room => room})))
             end
             
-            # retry_attempts = 0
-            # begin
-            #   retry_attempts += 1
-            #   room.listen(:timeout => 8) do |raw_msg|
-            #     handle_message(CampfireBot::Message.new(raw_msg.merge({:room => room})))
-            #     retry_attempts = 0
-            #   end
-            # rescue Tinder::Error, Tinder::ListenFailed, Tinder::SSLRequiredError, Tinder::AuthenticationFailed, OpenSSL::SSL::SSLError => e
-            #   # These are usually temporary errors.  Let's just keep retrying...
-            #   puts "Got an error: #{e.class}: #{e.message}.  Retrying..."
-            #   sleep 3
-            #   retry
-            # rescue => e
-            #   if e.message.include?("unable to resolve server address") || (retry_attempts < 3)
-            #     # Probably temporary issues.  Just sleep for a few seconds and then retry.
-            #     sleep 5
-            #     retry
-            #   end
-            #   @log.fatal "Unhandled exception while running: #{e.class}: #{e.message} \n #{e.backtrace.join("\n")}"
-            #   puts "Unhandled exception while running: #{e.class}: #{e.message} \n #{e.backtrace.join("\n")}"
-            #   raise
-            # end
           end
         end
 
