@@ -72,27 +72,32 @@ module CampfireBot
         # since room#listen blocks, stick it in its own thread
         @rooms.each_pair do |room_name, room|
           Thread.new do
-            retry_attempts = 0
-            begin
-              retry_attempts += 1
-              room.listen(:timeout => 8) do |raw_msg|
-                handle_message(CampfireBot::Message.new(raw_msg.merge({:room => room})))
-                retry_attempts = 0
-              end
-            rescue Tinder::Error, Tinder::ListenFailed, Tinder::SSLRequiredError, Tinder::AuthenticationFailed, OpenSSL::SSL::SSLError
-              # These are usually temporary errors.  Let's just keep retrying...
-              sleep 3
-              retry
-            rescue => e
-              if e.message.include?("unable to resolve server address") || (retry_attempts < 3)
-                # Probably temporary issues.  Just sleep for a few seconds and then retry.
-                sleep 5
-                retry
-              end
-              @log.fatal "Unhandled exception while running: #{e.class}: #{e.message} \n #{e.backtrace.join("\n")}"
-              puts "Unhandled exception while running: #{e.class}: #{e.message} \n #{e.backtrace.join("\n")}"
-              raise
+            room.listen(:timeout => 8) do |raw_msg|
+              handle_message(CampfireBot::Message.new(raw_msg.merge({:room => room})))
             end
+            
+            # retry_attempts = 0
+            # begin
+            #   retry_attempts += 1
+            #   room.listen(:timeout => 8) do |raw_msg|
+            #     handle_message(CampfireBot::Message.new(raw_msg.merge({:room => room})))
+            #     retry_attempts = 0
+            #   end
+            # rescue Tinder::Error, Tinder::ListenFailed, Tinder::SSLRequiredError, Tinder::AuthenticationFailed, OpenSSL::SSL::SSLError => e
+            #   # These are usually temporary errors.  Let's just keep retrying...
+            #   puts "Got an error: #{e.class}: #{e.message}.  Retrying..."
+            #   sleep 3
+            #   retry
+            # rescue => e
+            #   if e.message.include?("unable to resolve server address") || (retry_attempts < 3)
+            #     # Probably temporary issues.  Just sleep for a few seconds and then retry.
+            #     sleep 5
+            #     retry
+            #   end
+            #   @log.fatal "Unhandled exception while running: #{e.class}: #{e.message} \n #{e.backtrace.join("\n")}"
+            #   puts "Unhandled exception while running: #{e.class}: #{e.message} \n #{e.backtrace.join("\n")}"
+            #   raise
+            # end
           end
         end
 

@@ -62,10 +62,6 @@ rescue OptionParser::InvalidOption, OptionParser::MissingArgument
   exit
 end
 
-# Create our bot and connect
-bot.create(options[:config_file], options[:env], options[:plugin_path])
-bot.connect
-
 # Setup our daemon
 if options[:daemon]
   pid_path = options[:pid_directory] || "/tmp/"
@@ -80,4 +76,15 @@ if options[:daemon]
   )
 end
 
-bot.run
+begin
+  # Create our bot and connect
+  bot.create(options[:config_file], options[:env], options[:plugin_path])
+  bot.connect
+  bot.run
+rescue => e
+  puts "Got an exception: #{e.class}: #{e.message}"
+  puts e.backtrace
+  puts "Sleeping for 5 seconds and retrying..."
+  sleep 5
+  retry
+end
