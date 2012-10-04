@@ -65,6 +65,7 @@ module CampfireBot
     end
 
     def run(interval = 5)
+      puts "Loading up!"
       catch(:stop_listening) do
         trap('INT') { throw :stop_listening }
         
@@ -82,14 +83,14 @@ module CampfireBot
               # These are usually temporary errors.  Let's just keep retrying...
               sleep 3
               retry
-            rescue Exception => e
+            rescue => e
               if e.message.include?("unable to resolve server address") || (retry_attempts < 3)
                 # Probably temporary issues.  Just sleep for a few seconds and then retry.
                 sleep 5
                 retry
               end
-              trace = e.backtrace.join("\n")
               @log.fatal "Unhandled exception while running: #{e.class}: #{e.message} \n #{e.backtrace.join("\n")}"
+              puts "Unhandled exception while running: #{e.class}: #{e.message} \n #{e.backtrace.join("\n")}"
               raise
             end
           end

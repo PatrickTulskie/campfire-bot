@@ -76,7 +76,7 @@ if options[:daemon]
     :dir_mode   => :normal,
     :dir        => pid_path,
     :app_name   => app_name,
-    :log_output => false
+    :log_output => true
   )
 end
 
